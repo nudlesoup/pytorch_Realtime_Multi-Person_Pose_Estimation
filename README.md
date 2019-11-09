@@ -3,11 +3,6 @@ Multi Person PoseEstimation By PyTorch
 
 ## Results
 Test 1
-<p align="left">
-<img src="https://github.com/tensorboy/pytorch_Realtime_Multi-Person_Pose_Estimation/blob/master/readme/result.gif", width="720">
-</p>
-
-[![License](https://img.shields.io/github/license/mashape/apistatus.svg)](https://opensource.org/licenses/MIT) 
 
 ## Require
 1. [Pytorch](http://pytorch.org/)
