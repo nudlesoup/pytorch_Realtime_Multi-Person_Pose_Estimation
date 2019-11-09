@@ -26,10 +26,19 @@ from lib.config import cfg, update_config
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--cfg', help='experiment configure file name',
-                    default='./experiments/vgg19_368x368_sgd.yaml', type=str)
-parser.add_argument('--weight', type=str,
-                    default='/home/tensorboy/Downloads/pose_model.pth')
+#parser.add_argument('--cfg', help='experiment configure file name',
+#                    default='./experiments/vgg19_368x368_sgd.yaml', type=str)
+#parser.add_argument('--weight', type=str,
+#                    default='/home/tensorboy/Downloads/pose_model.pth')
+#parser.add_argument('opts',
+#                    help="Modify config options using the command-line",
+#                    default=None,
+#                    nargs=argparse.REMAINDER)
+parser.add_argument('--cfg', help='experiment configure file name', default='/home/nudlesoup/Research'
+                                                                            '/pytorch_Realtime_Multi'
+                                                                            '-Person_Pose_Estimation/experiments'
+                                                                            '/vgg19_368x368_sgd.yaml', type=str)
+parser.add_argument('--weight', type=str, default='/home/nudlesoup/Downloads/pose_model.pth')
 parser.add_argument('opts',
                     help="Modify config options using the command-line",
                     default=None,
@@ -40,7 +49,7 @@ args = parser.parse_args()
 update_config(cfg, args)
 
         
-weight_name = '/home/tensorboy/Downloads/pose_model.pth'
+weight_name = '/home/nudlesoup/Downloads/pose_model.pth'
 
 model = get_model('vgg19')     
 model.load_state_dict(torch.load(weight_name))
@@ -48,7 +57,7 @@ model = torch.nn.DataParallel(model).cuda()
 model.float()
 model.eval()
 
-test_image = './readme/ski.jpg'
+test_image = '/home/nudlesoup/Research/pytorch_Realtime_Multi-Person_Pose_Estimation/readme/trial3.jpg'
 oriImg = cv2.imread(test_image) # B,G,R order
 shape_dst = np.min(oriImg.shape[0:2])
 
@@ -61,5 +70,5 @@ print(im_scale)
 humans = paf_to_pose_cpp(heatmap, paf, cfg)
         
 out = draw_humans(oriImg, humans)
-cv2.imwrite('result.png',out)   
+cv2.imwrite('result4.png',out)
 

@@ -20,7 +20,7 @@ from lib.utils.paf_to_pose import paf_to_pose_cpp
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--cfg', help='experiment configure file name',
+'''parser.add_argument('--cfg', help='experiment configure file name',
                     default='./experiments/vgg19_368x368_sgd.yaml', type=str)
 parser.add_argument('--weight', type=str,
                     default='../ckpts/openpose.pth')
@@ -28,6 +28,18 @@ parser.add_argument('opts',
                     help="Modify config options using the command-line",
                     default=None,
                     nargs=argparse.REMAINDER)
+'''
+parser.add_argument('--cfg', help='experiment configure file name', default='/home/nudlesoup/Research'
+                                                                            '/pytorch_Realtime_Multi'
+                                                                            '-Person_Pose_Estimation/experiments'
+                                                                            '/vgg19_368x368_sgd.yaml', type=str)
+parser.add_argument('--weight', type=str,
+                    default='../ckpts/openpose.pth')
+parser.add_argument('opts',
+                    help="Modify config options using the command-line",
+                    default=None,
+                    nargs=argparse.REMAINDER)
+
 args = parser.parse_args()
 
 # update config file
@@ -75,8 +87,6 @@ def eval_coco(outputs, annFile, imgIds):
     return cocoEval.stats[0]
 
 
-
-
 def get_outputs(img, model, preprocess):
     """Computes the averaged heatmap and paf for the given image
     :param multiplier:
@@ -112,6 +122,7 @@ def get_outputs(img, model, preprocess):
     paf = output1.cpu().data.numpy().transpose(0, 2, 3, 1)[0]
 
     return paf, heatmap, im_scale
+
 
 
 def append_result(image_id, humans, upsample_keypoints, outputs):
@@ -241,7 +252,14 @@ def handle_paf_and_heat(normal_heat, flipped_heat, normal_paf, flipped_paf):
 
     return averaged_paf, averaged_heatmap
 
-        
+def get_multiplier(img):
+    """Computes the sizes of image at different scales
+    :param img: numpy array, the current image
+    :returns : list of float. The computed scales
+    """
+    scale_search = [0.5, 1., 1.5, 2, 2.5]
+    return [x * 368. / float(img.shape[0]) for x in scale_search]
+
 def run_eval(image_dir, anno_file, vis_dir, model, preprocess):
     """Run the evaluation on the test set and report mAP score
     :param model: the model to test

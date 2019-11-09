@@ -19,13 +19,19 @@ from scipy.ndimage.filters import gaussian_filter, maximum_filter
 
 from lib.network.rtpose_vgg import get_model
 from lib.network import im_transform
-from evaluate.coco_eval import get_outputs, handle_paf_and_heat
+from lib.network.post import  find_peaks
+from evaluate.coco_eval import get_outputs, handle_paf_and_heat , get_multiplier
 from lib.utils.common import Human, BodyPart, CocoPart, CocoColors, CocoPairsRender
 from lib.pafprocess import pafprocess
+from lib.config import cfg, update_config
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--cfg', help='experiment configure file name',
-                    default='./experiments/vgg19_368x368_sgd_lr1.yaml', type=str)
+'''parser.add_argument('--cfg', help='experiment configure file name',
+                    default='./experiments/vgg19_368x368_sgd_lr1.yaml', type=str)'''
+parser.add_argument('--cfg', help='experiment configure file name', default='/home/nudlesoup/Research'
+                                                                            '/pytorch_Realtime_Multi'
+                                                                            '-Person_Pose_Estimation/experiments'
+                                                                            '/vgg19_368x368_sgd.yaml', type=str)
 parser.add_argument('--weight', type=str,
                     default='../ckpts/openpose.pth')
 parser.add_argument('opts',
@@ -63,7 +69,8 @@ def draw_humans(npimg, humans, imgcopy=False):
 
     return npimg
     
-weight_name = './network/weight/pose_model.pth'
+#weight_name = './network/weight/pose_model.pth'
+weight_name= '/home/nudlesoup/Downloads/pose_model.pth'
 model = get_model('vgg19')     
 model.load_state_dict(torch.load(weight_name))
 model.cuda()
@@ -85,48 +92,50 @@ if __name__ == "__main__":
 
         with torch.no_grad():
             paf, heatmap = get_outputs(
-                multiplier, oriImg, model,  'rtpose')
+               shape_dst, model,  'rtpose')
+        #with torch.no_grad():
+         #paf, heatmap = get_outputs(oriImg, model,  'rtpose')
                   
-    heatmap_peaks = np.zeros_like(heatmap)
-    for i in range(19):
-        heatmap_peaks[:,:,i] = find_peaks(heatmap[:,:,i])
-    heatmap_peaks = heatmap_peaks.astype(np.float32)
-    heatmap = heatmap.astype(np.float32)
-    paf = paf.astype(np.float32)
+        heatmap_peaks = np.zeros_like(heatmap)
+        for i in range(19):
+            heatmap_peaks[:,:,i] = find_peaks(heatmap[:,:,i])
+        heatmap_peaks = heatmap_peaks.astype(np.float32)
+        heatmap = heatmap.astype(np.float32)
+        paf = paf.astype(np.float32)
 
-    #C++ postprocessing      
-    pafprocess.process_paf(heatmap_peaks, heatmap, paf)
+        #C++ postprocessing
+        pafprocess.process_paf(heatmap_peaks, heatmap, paf)
 
-    humans = []
-    for human_id in range(pafprocess.get_num_humans()):
-        human = Human([])
-        is_added = False
+        humans = []
+        for human_id in range(pafprocess.get_num_humans()):
+            human = Human([])
+            is_added = False
 
-        for part_idx in range(18):
-            c_idx = int(pafprocess.get_part_cid(human_id, part_idx))
-            if c_idx < 0:
-                continue
+            for part_idx in range(18):
+                c_idx = int(pafprocess.get_part_cid(human_id, part_idx))
+                if c_idx < 0:
+                    continue
 
-            is_added = True
-            human.body_parts[part_idx] = BodyPart(
-                '%d-%d' % (human_id, part_idx), part_idx,
-                float(pafprocess.get_part_x(c_idx)) / heatmap.shape[1],
-                float(pafprocess.get_part_y(c_idx)) / heatmap.shape[0],
-                pafprocess.get_part_score(c_idx)
-            )
+                is_added = True
+                human.body_parts[part_idx] = BodyPart(
+                    '%d-%d' % (human_id, part_idx), part_idx,
+                    float(pafprocess.get_part_x(c_idx)) / heatmap.shape[1],
+                    float(pafprocess.get_part_y(c_idx)) / heatmap.shape[0],
+                    pafprocess.get_part_score(c_idx)
+                )
 
-        if is_added:
-            score = pafprocess.get_score(human_id)
-            human.score = score
-            humans.append(human)
+            if is_added:
+                score = pafprocess.get_score(human_id)
+                human.score = score
+                humans.append(human)
             
-    out = draw_humans(oriImg, humans)
+        out = draw_humans(oriImg, humans)
 
-    # Display the resulting frame
-    cv2.imshow('Video', out)
+         # Display the resulting frame
+        cv2.imshow('Video', out)
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+         break
 
     # When everything is done, release the capture
     video_capture.release()
