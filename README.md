@@ -2,8 +2,7 @@
 Multi Person PoseEstimation By PyTorch
 
 ## Results
-Testing Regularizing
-
+Test 1
 ## Require
 1. [Pytorch](http://pytorch.org/)
 2. pytorch-lightning
