@@ -70,5 +70,5 @@ print(im_scale)
 humans = paf_to_pose_cpp(heatmap, paf, cfg)
         
 out = draw_humans(oriImg, humans)
-cv2.imwrite('result4.png',out)
+cv2.imwrite('result5.jpg',out)
 
